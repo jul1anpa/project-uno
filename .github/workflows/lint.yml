@@ -1,12 +1,6 @@
-name: Lint and Format with Ruff
+name: Lint Code Base
 
-on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+on: [push, pull_request]
 
 jobs:
     lint:
@@ -26,8 +20,5 @@ jobs:
                 python -m pip install --upgrade pip
                 pip install -r requirements.txt
 
-            - name: Run Ruff linting
-              run: ruff check .
-
-            - name: Run Ruff formatting
-              run: ruff check . --fix
+            - name: Run Ruff
+              run: ruff . || { echo 'Ruff failed'; exit 1;}
