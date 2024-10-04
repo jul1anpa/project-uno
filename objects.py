@@ -12,6 +12,9 @@ class GameState:
         self._currentPlayer = None
         self._direction = None
         self.winner = None
+        self.round = 1
+        self.discardPile = DiscardPile()
+        self.drawPile = DrawPile()
 
     @property
     def currentPlayer(self):
@@ -48,25 +51,48 @@ class GameState:
         '''
         Add a player object to the list of players.
         '''
-        if isinstance(player, Player):
+        if isinstance(player, Player) or isinstance(player, ComputerPlayer):
             self.players.append(player)
         else:
-            raise ValueError("Players must have a Player object type.")
+            raise ValueError("Players must have a Player or ComputerPlayer object type.")
         
     def setDealer(self):
         '''
         Determines which player is the dealer at the start of the game.
         '''
         ...
-        
-    def dealCards(self, drawPile):
+
+    def dealCards(self):
         '''
-        Deals seven cards to each player.
+        Deals seven cards to each player at the start of the game.
         '''
         for player in self.players:
-            for i in range(7):
-                card = drawPile.draw()
-                player.hand.addCard(card)
+            while player.hand.countCards() < 7:
+                player.drawCard(self.drawPile)
+
+    def checkWinner(self):
+        '''
+        Checks each player's score to determine if there is a winner. To win a game, a player must have a score of at least 500.
+        '''
+        for player in self.players:
+            if player.points >= 500:
+                self.winner = player
+                return True
+            else:
+                return False
+
+    def nextRound(self):
+        '''
+        Increments round number, shuffles player hand's and discard pile back into the draw pile
+        '''
+        if self.checkWinner():
+            return # Need to decide how a game will be ended
+        else:
+            self.round += 1
+            for player in self.players:
+                player.resetHand(self.drawPile)
+            discardPileCards = self.discardPile.removeAllCards()
+            
 
 
 
@@ -146,6 +172,33 @@ class Player:
         else:
             self.hasUno = False
 
+    def resetHand(self, drawPile):
+        '''
+        Removes cards from hand and adds them back into the draw pile.
+        '''
+        cards = self.hand.removeAllCards()
+        for card in cards:
+            drawPile.addCard(card)
+
+
+
+
+class ComputerPlayer(Player):        
+    def playCard(self, topCard):
+        '''
+        Computer player plays a card from hand that matches the top card or a wild card. If there are no playable cards, the computer
+        player will draw a card instead.
+        '''
+        playable_cards = [card for card in self.hand if card.color == topCard.color or card.value == topCard.value or card.value == "Wild"]
+        
+        if playable_cards:
+            chosen_card = random.choice(playable_cards)
+            self.hand.removeCard(chosen_card)
+            print(f"{self.name} plays: {chosen_card}")
+            return chosen_card
+        else:
+            self.drawCard()
+
 
 
 class Hand:
@@ -160,6 +213,35 @@ class Hand:
         Adds a card to the player's hand.
         '''
         self.cards.append(card)
+
+    def removeCard(self, card):
+        '''
+        Remove a card from the hand and return it.
+        '''
+        if card in self.cards:
+            self.cards.remove(card)
+            return card
+    
+    def removeAllCards(self):
+        '''
+        Removes all cards from the hand and returns them.
+        '''
+        cards = self.cards
+        self.cards.clear()
+        return cards
+    
+    def showHand(self):
+        '''
+        Display the cards in the hand.
+        '''
+        return self.cards
+
+    def countCards(self):
+        '''
+        Return the number of cards in the hand.
+        '''
+        return len(self.cards)
+
 
 
 class Card:
@@ -184,7 +266,15 @@ class DiscardPile:
         '''
         self.cards.append(card)
 
-    def takeAllButTopCard(self):
+    def removeAllCards(self):
+        '''
+        Removes all of the cards in the discard pile and returns them.
+        '''
+        cards = self.cards
+        self.cards.clear()
+        return cards
+
+    def removeAllButTopCard(self):
         '''
         Returns all cards except the top most one.
         '''
@@ -192,6 +282,8 @@ class DiscardPile:
         restOfCards = self.card[:-1]
         self.cards.append(topCard)
         return restOfCards
+
+
 
 class DrawPile:
     '''
@@ -205,6 +297,12 @@ class DrawPile:
         Returns a boolean depending on whether the draw pile is empty or not. 
         '''
         return len(self.cards) == 0
+    
+    def addCard(self, card):
+        '''
+        Appends a card to the draw pile.
+        '''
+        self.cards.append(card)
 
     def draw(self):
         '''
