@@ -11,7 +11,9 @@ class GameState:
         self.players = []
         self._currentPlayer = None
         self._direction = None
-        self.winner = None
+        self.hasWinner = False
+        self.roundWon = False
+        self.gameWinner = None
         self.round = 1
         self.discardPile = DiscardPile()
         self.drawPile = DrawPile()
@@ -70,16 +72,31 @@ class GameState:
             while player.hand.countCards() < 7:
                 player.drawCard(self.drawPile)
 
+    def setTopCard(self):
+        '''
+        Places top card of draw pile on discard pile to begin play.
+        '''
+        # Need to add logic for if a card is a Wild or Wild Draw 4
+        card = self.drawPile.draw()
+        self.discardPile.addCard(card)
+
     def checkWinner(self):
         '''
         Checks each player's score to determine if there is a winner. To win a game, a player must have a score of at least 500.
         '''
         for player in self.players:
             if player.points >= 500:
+                self.hasWinner = True
                 self.winner = player
                 return True
             else:
                 return False
+
+    def checkIfRoundWon(self):
+        '''
+        Checks if any player has played all of their cards.
+        '''
+        ...
 
     def nextRound(self):
         '''
@@ -92,7 +109,9 @@ class GameState:
             for player in self.players:
                 player.resetHand(self.drawPile)
             discardPileCards = self.discardPile.removeAllCards()
-            
+            for card in discardPileCards:
+                self.drawPile.addCard(card)
+            self.drawPile.shuffleInitial()
 
 
 
@@ -163,7 +182,7 @@ class Player:
             card = drawPile.draw()
             self.hand.addCard(card)
 
-    def checkUno(self):
+    def callUno(self):
         '''
         Checks if the player's hand size is equal to one and determines whether or not they have UNO.
         '''
