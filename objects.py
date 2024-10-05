@@ -10,7 +10,7 @@ class GameState:
         '''
         self.players = []
         self._currentPlayer = None
-        self._direction = None
+        self._direction = "clockwise"
         self.hasWinner = False
         self.roundWon = False
         self.gameWinner = None
@@ -92,26 +92,16 @@ class GameState:
             else:
                 return False
 
-    def checkIfRoundWon(self):
-        '''
-        Checks if any player has played all of their cards.
-        '''
-        ...
-
     def nextRound(self):
         '''
-        Increments round number, shuffles player hand's and discard pile back into the draw pile
+        Increments round number and empties player hand's and discard pile back into the draw pile.
         '''
-        if self.checkWinner():
-            return # Need to decide how a game will be ended
-        else:
-            self.round += 1
-            for player in self.players:
-                player.resetHand(self.drawPile)
-            discardPileCards = self.discardPile.removeAllCards()
-            for card in discardPileCards:
-                self.drawPile.addCard(card)
-            self.drawPile.shuffleInitial()
+        self.round += 1
+        for player in self.players:
+            player.resetHand(self.drawPile)
+        discardPileCards = self.discardPile.removeAllCards()
+        for card in discardPileCards:
+            self.drawPile.addCard(card)
 
 
 
@@ -248,18 +238,12 @@ class Hand:
         cards = self.cards
         self.cards.clear()
         return cards
-    
-    def showHand(self):
-        '''
-        Display the cards in the hand.
-        '''
-        return self.cards
 
-    def countCards(self):
+    def isEmpty(self):
         '''
-        Return the number of cards in the hand.
+        Returns a boolean depending on if a player's hand is empty or not.
         '''
-        return len(self.cards)
+        return len(self.cards) == 0
 
 
 
