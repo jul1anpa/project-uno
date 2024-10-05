@@ -1,5 +1,11 @@
 import random
 
+color = ('RED','GREEN','BLUE','YELLOW')
+rank = ('0','1','2','3','4','5','6','7','8','9','Skip','Reverse','Draw2','Draw4','Wild')
+ctype = {'0':'number','1':'number','2':'number','3':'number','4':'number','5':'number','6':'number',
+            '7':'number','8':'number','9':'number','Skip':'action','Reverse':'action','Draw2':'action',
+            'Draw4':'action_nocolor','Wild':'action_nocolor'}
+
 class GameState:
     '''
     Represents the state of the game.
@@ -251,8 +257,24 @@ class Card:
     '''
     Represents a card in UNO.
     '''
-    def __init__(self):
-        ...
+    def __init__(self, color, rank):
+        self.rank = rank
+        self.deck = []
+
+        if ctype[rank] == 'number':
+            self.color = color
+        elif ctype[rank] == 'action':
+            self.color = color
+        else:
+            self.color = None
+
+        for clr in color:
+            for ran in rank:
+                if ctype[ran] != 'action_nocolor':
+                    self.deck.append(Card(clr, ran))
+                    self.deck.append(Card(clr, ran))
+                else:
+                    self.deck.append(Card(clr, ran))
 
 
 
