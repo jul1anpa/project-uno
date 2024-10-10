@@ -7,11 +7,9 @@ def game_loop():
     Initializes the game state, sets up rounds, handles play, and scores rounds.
     Continues looping through rounds until a player wins the game.
     '''
-    gameState = obj.GameState() # Initialize the game state
+    deck = create_deck() # Initialize a deck
 
-    # How are players going to be added to the game state? via Pygame?
-
-
+    gameState = obj.GameState(deck) # Initialize the game state
 
     while not gameState.hasWinner: # Create game loop that runs until there is a winner
         setup_round(gameState)
@@ -19,6 +17,36 @@ def game_loop():
         score_round(gameState)
         gameState.checkWinner() # Checks for winner and sets hasWinner to True if one is found
         gameState.nextRound() # Proceeds to next round if there is no winner
+
+
+
+def create_deck():
+    '''
+    Creates an UNO deck by initializing each Card with a color, rank, and/ or action.
+    '''
+    colors = ["Blue", "Green", "Red", "Yellow"]
+    ranks = list(range(10))
+    actions = ["Skip", "Reverse", "Draw Two"]
+    wilds = ["Wild", "Wild Draw Four"]
+
+    deck = []
+
+    for color in colors:
+        deck.append(obj.Card(color, 0)) # Creates a single 0 card for each color
+        for rank in ranks[1:]:
+            deck.append(obj.Card(color, rank)) # Creates two copies of each rank for each color
+            deck.append(obj.Card(color, rank))
+    
+    for color in colors:
+        for action in actions:
+            deck.append(obj.Card(color, None, action)) # Creates two copies of each action for each color
+            deck.append(obj.Card(color, None, action))
+    
+    for wild in wilds:
+        for _ in range(4):
+            deck.append(obj.Card(None, None, wild)) # Creates four copies of each wild action
+    
+    return deck
 
 
 
@@ -33,6 +61,7 @@ def setup_round(gameState):
     '''
     gameState.drawPile.shuffleInitial()
     gameState.setDealer()
+    gameState.drawPile.shuffleInitial()
     gameState.dealCards()
     gameState.setTopCard()
 
@@ -47,23 +76,29 @@ def play_round(gameState):
     Parameters:
         gameState (GameState): The current game state object.
     '''
-    while not gameState.roundWon: # Create round loop that runs until a round has been won
-        for player in gameState.players: # Loop through each player's turn
-            gameState.currentPlayer(player)
-            take_turn(player, gameState) # Execute turn logic for each player
-            if player.hand.isEmpty():
-                gameState.roundWon = True
+    while not gameState.roundWon:
+        currentPlayer = gameState.players[gameState.currentPlayerIndex]
+        take_turn(currentPlayer, gameState)
+        if currentPlayer.hand.isEmpty():
+            gameState.roundWinner = currentPlayer
+            gameState.roundWon = True
 
 
 
 def score_round(gameState):
     '''
-    Handles scoring logic at the end of the round.
+    Handles scoring logic at the end of the round and resets the round winner.
 
     Parameters:
         gameState (GameState): The current game state object.
     '''
-    ... # Handle scoring here 
+    scoredPoints = 0
+    for player in gameState.players:
+        for card in player.hand.cards:
+            scoredPoints += card.points
+    
+    gameState.roundWinner.points(scoredPoints)
+    gameState.roundWinner = None
 
 
 
@@ -77,4 +112,5 @@ def take_turn(player, gameState):
     '''
     player.drawCard() # Each player begins by drawing a card
     
-    # Need logic for playable cards
+    playableCards = [card for card in player.hand.cards if gameState.isCardPlayable(card)]
+    

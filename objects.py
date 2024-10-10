@@ -4,54 +4,29 @@ class GameState:
     '''
     Represents the state of the game.
     '''
-    def __init__(self):
+    def __init__(self, deck):
         '''
         Initializes a game state with the given attributes.
+
+        :param deck: list - A list containing 108 Card objects.
         '''
-        self.players = []
-        self._currentPlayer = None
-        self._direction = "clockwise"
-        self.hasWinner = False
-        self.roundWon = False
-        self.gameWinner = None
-        self.round = 1
         self.discardPile = DiscardPile()
-        self.drawPile = DrawPile()
-
-    @property
-    def currentPlayer(self):
-        '''
-        Returns the current Player.
-        '''
-        return self._currentPlayer
-
-    @currentPlayer.setter
-    def currentPlayer(self, player):
-        '''
-        Sets the initial player for turn order.
-        '''
-        if isinstance(player, Player):
-            self._currentPlayer = player
-        else:
-            raise ValueError("Initial player must be a Player object.")
-        
-    @property
-    def direction(self):
-        '''
-        Returns the current direction.
-        '''
-        return self._direction
-    
-    @direction.setter
-    def direction(self, direction):
-        '''
-        Sets the direction of play.
-        '''
-        self._direction = direction
+        self.drawPile = DrawPile(deck)
+        self.players = []
+        self.currentPlayerIndex = 0
+        self.dealer = None
+        self.direction = 1 # Represented by +1 for clockwise direction or -1 for counter-clockwise direction
+        self.round = 1
+        self.roundWon = False
+        self.roundWinner = None
+        self.hasWinner = False
+        self.gameWinner = None
 
     def addPlayer(self, player):
         '''
         Add a player object to the list of players.
+
+        :param player: Player object - Represents a player.
         '''
         if isinstance(player, Player) or isinstance(player, ComputerPlayer):
             self.players.append(player)
@@ -60,9 +35,22 @@ class GameState:
         
     def setDealer(self):
         '''
-        Determines which player is the dealer at the start of the game.
+        Determines which player is the dealer at the start of the game and sets the current player to the left of the dealer to begin play.
         '''
-        ...
+        highestValue = -1
+        newDealer = None
+
+        for player in self.players:
+            card = self.drawPile.draw()
+            if card.action is None and card.rank > highestValue: # Ensures that only number cards are considered and the card's value is higher than the current highest value
+                highestValue = card.rank # Sets new highest value
+                newDealer = player # Assigns dealer to the player who drew the highest value card
+            self.drawPile.addCardToBottom(card) # Adds the drawn card back to the bottom of the draw pile
+
+        if newDealer is None: # Handles edge case if no player draws a number card
+            newDealer = self.players[0] # Sets new dealer to the first player in the players list
+
+        self.dealer = newDealer
 
     def dealCards(self):
         '''
@@ -74,10 +62,24 @@ class GameState:
 
     def setTopCard(self):
         '''
-        Places top card of draw pile on discard pile to begin play.
+        Places top card of draw pile on discard pile to begin play and handles logic depending on what is drawn.
         '''
-        # Need to add logic for if a card is a Wild or Wild Draw 4
         card = self.drawPile.draw()
+
+        while card.action == "Wild" or card.action == "Wild Draw Four":
+            self.drawPile.addCardToBottom(card) 
+            card = self.drawPile.draw()
+        
+        if card.action == "Draw Two":
+            self.drawTwo()
+        elif card.action == "Reverse":
+            self.reverseDirection()
+            self.nextPlayer()
+        elif card.action == "Skip":
+            self.skip()
+        elif card.action is None:
+            self.nextPlayer()
+
         self.discardPile.addCard(card)
 
     def checkWinner(self):
@@ -97,11 +99,77 @@ class GameState:
         Increments round number and empties player hand's and discard pile back into the draw pile.
         '''
         self.round += 1
+        self.roundWon = False
         for player in self.players:
             player.resetHand(self.drawPile)
         discardPileCards = self.discardPile.removeAllCards()
-        for card in discardPileCards:
-            self.drawPile.addCard(card)
+        self.drawPile += discardPileCards
+
+    def isCardPlayable(self, card):
+        '''
+        Checks whether a card is able to be played or not.
+
+        :param card: Card object - Represents a card.
+        '''
+        topCard = self.discardPile.topCard
+
+        if card.color == topCard.color or card.rank == topCard.rank or card.action == "Wild" or card.action == "Wild Draw Four":
+            return True
+        
+        return False
+
+    def reverseDirection(self):
+        '''
+        Reverses the direction of play.
+        '''
+        self.direction *= -1
+
+    def drawTwo(self):
+        '''
+        The player ahead of the current player draws two cards and is skipped.
+        '''
+        playerAffected = self.players[(self.currentPlayerIndex + self.direction) % len(self.players)]
+        playerAffected.drawCard(self.drawPile)
+        playerAffected.drawCard(self.drawPile)
+        self.skip()
+
+    def wildDrawFour(self):
+        '''
+        The player ahead of the current player draws four cards and is skipped. The current player selects a new color to begin play with.
+        '''
+        playerAffected = self.players[(self.currentPlayerIndex + self.direction) % len(self.players)]
+        for _ in range(4):
+            playerAffected.drawCard(self.drawPile)
+        self.skip()
+
+    def skip(self):
+        '''
+        Skips the next player in turn order.
+        '''
+        self.currentPlayerIndex = (self.currentPlayerIndex + (self.direction * 2)) % len(self.players)
+
+    def nextPlayer(self):
+        '''
+        Determines the next player's turn depending on direction of play.
+        '''
+        # The modulo operator is key here in order to wrap around the player list when incrementing past the end of the player list or decrementing past the beginning of the player list
+
+        # A direction of 1 will increment the current player index by 1 (or clockwise direction of play)
+        # When incrementing past the end of the list, the modulo operation will return 0
+
+        # A direction of -1 will decrement the current player index by 1 (or counter-clockwise direction of play)
+        # When decrementing past the beginning of the list, the modulo operation will return the value of the last index (If there are four players, it will return 3)
+
+        # For example, if there are four players in the game and the current player is at index 0 and the direction is -1 (or counter-clockwise)
+        # self.currentPlayerIndex = (0 + -1) % 4
+        #                         = -1 % 4 = 3
+        # The new currentPlayerIndex would now be set to 3 or the player at the end of the list
+
+        # The modulus formula is helpful when trying to understand the logic behind the return value of the modulo operator
+        # The formula is below:
+        #                           a % b    =     a - b * floor(a/b)
+
+        self.currentPlayerIndex = (self.currentPlayerIndex + self.direction) % len(self.players) 
 
 
 
@@ -109,7 +177,7 @@ class Player:
     '''
     Represents a player in the UNO game.
     '''
-    def __init__(self, name, isDealer=False):
+    def __init__(self, name):
         '''
         Initializes a player with the given attributes.
 
@@ -119,10 +187,7 @@ class Player:
         self._name = name
         self._points = 0
         self.hand = Hand()
-        self.isDealer = isDealer
-        self.isTurn = False
         self.hasUno = False
-        self.hasDrawnCard = False
 
     @property
     def name(self):
@@ -158,12 +223,6 @@ class Player:
         else:
             raise ValueError("Points must be an integer value.")
 
-    def playCard(self, discardPile, card):
-        '''
-        Plays a card from the player's hand and stores it in the discard pile.
-        '''
-        ...
-
     def drawCard(self, drawPile):
         '''
         Draws a card from the draw pile and stores it in the player's hand.
@@ -186,13 +245,15 @@ class Player:
         Removes cards from hand and adds them back into the draw pile.
         '''
         cards = self.hand.removeAllCards()
-        for card in cards:
-            drawPile.addCard(card)
+        drawPile.cards += cards
 
 
 
 
-class ComputerPlayer(Player):        
+class ComputerPlayer(Player):     
+    '''
+    Represents a computer player in the UNO game.
+    '''   
     def playCard(self, topCard):
         '''
         Computer player plays a card from hand that matches the top card or a wild card. If there are no playable cards, the computer
@@ -203,7 +264,6 @@ class ComputerPlayer(Player):
         if playable_cards:
             chosen_card = random.choice(playable_cards)
             self.hand.removeCard(chosen_card)
-            print(f"{self.name} plays: {chosen_card}")
             return chosen_card
         else:
             self.drawCard()
@@ -251,17 +311,50 @@ class Card:
     '''
     Represents a card in UNO.
     '''
-    def __init__(self):
-        ...
+    def __init__(self, color=None, rank=None, action=None):
+        '''
+        Initializes a card with the given attributes.
+
+        :param color: str - Indicates which color a card is or None.
+        :param rank: int - Indicates what number value a card has or None.
+        :param action: str - Indicates which action a card has or None.
+        '''
+        self.color = color
+        self.rank = rank
+        self.action = action
+        self.points = self.assign_points()
+
+    def assign_points(self):
+        '''
+        Assigns a card a point value depending on its face value and/ or special type. This point value is used for scoring at the end of each round.
+        '''
+        if self.rank is not None:
+            return self.rank
+        elif self.action == "Draw Two" or self.action == "Reverse" or self.action == "Skip":
+            return 20
+        elif self.action == "Wild" or self.action == "Wild Draw Four":
+            return 50
+        else:
+            return 0
+
 
 
 
 class DiscardPile:
     '''
-    Represents the discard pile in UNO.
+    Represents a discard pile in UNO.
     '''
     def __init__(self):
-        self.cards = []
+        self.cards = [] # The top most card is represented by the last card in the list
+
+    @property
+    def topCard(self):
+        '''
+        Returns the top card of the discard pile.
+        '''
+        if len(self.cards) > 0:
+            return self.cards[-1]
+        return None
 
     def addCard(self, card):
         '''
@@ -282,18 +375,23 @@ class DiscardPile:
         Returns all cards except the top most one.
         '''
         topCard = self.cards[-1]
-        restOfCards = self.card[:-1]
-        self.cards.append(topCard)
+        restOfCards = self.cards[:-1]
+        self.cards = topCard
         return restOfCards
 
 
 
 class DrawPile:
     '''
-    Represents the draw pile in UNO.
+    Represents a draw pile in UNO.
     '''
     def __init__(self, cards):
-        self.cards = cards
+        '''
+        Initializes a draw pile with the given attribute.
+
+        :param cards: list - A list containing 108 Card objects.
+        '''
+        self.cards = cards # The top most card is represented by the last card in the list and vice versa
 
     def isEmpty(self):
         '''
@@ -301,20 +399,27 @@ class DrawPile:
         '''
         return len(self.cards) == 0
     
-    def addCard(self, card):
+    def addCardToBottom(self, card):
         '''
-        Appends a card to the draw pile.
+        Adds a card to the bottom of the draw pile.
         '''
-        self.cards.append(card)
+        self.cards.insert(0, card) # Inserts a card to the front of the cards list
+
+    def addCardToTop(self, card):
+        '''
+        Adds a card to the top of the draw pile.
+        '''
+        self.cards.append(card) # Appends a card to the end of the cards list
 
     def draw(self):
         '''
         Returns the last card stored in the draw pile or reshuffles the draw pile if there are none left.
         '''
         if self.cards:
-            return self.cards.pop()
+            return self.cards.pop() # Removes a card from the end of the cards list
         else:
             self.reshuffle()
+            return self.cards.pop()
     
     def shuffleInitial(self):
         '''
@@ -326,5 +431,5 @@ class DrawPile:
         '''
         Shuffles the draw pile once all cards have been drawn.
         '''
-        self.cards = discardPile.takeAllButTopCard()
+        self.cards = discardPile.removeAllButTopCard()
         random.shuffle(self.cards)
