@@ -249,7 +249,6 @@ class Player:
 
 
 
-
 class ComputerPlayer(Player):     
     '''
     Represents a computer player in the UNO game.
@@ -336,7 +335,6 @@ class Card:
             return 50
         else:
             return 0
-
 
 
 
