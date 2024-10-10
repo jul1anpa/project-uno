@@ -82,6 +82,7 @@ def play_round(gameState):
         if currentPlayer.hand.isEmpty():
             gameState.roundWinner = currentPlayer
             gameState.roundWon = True
+        gameState.nextPlayer()
 
 
 
