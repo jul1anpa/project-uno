@@ -117,6 +117,13 @@ class GameState:
             return True
         
         return False
+    
+    def playCard(self, player, card):
+        '''
+        Placeholder for a player playing a card from their hand.
+        '''
+        cardToPlay = player.hand.removeCard(card)
+        self.discardPile.addCard(cardToPlay)
 
     def reverseDirection(self):
         '''
@@ -133,9 +140,9 @@ class GameState:
         playerAffected.drawCard(self.drawPile)
         self.skip()
 
-    def wildDrawFour(self):
+    def drawFour(self):
         '''
-        The player ahead of the current player draws four cards and is skipped. The current player selects a new color to begin play with.
+        The player ahead of the current player draws four cards and is skipped.
         '''
         playerAffected = self.players[(self.currentPlayerIndex + self.direction) % len(self.players)]
         for _ in range(4):
@@ -321,9 +328,9 @@ class Card:
         self.color = color
         self.rank = rank
         self.action = action
-        self.points = self.assign_points()
+        self.points = self.assignPoints()
 
-    def assign_points(self):
+    def assignPoints(self):
         '''
         Assigns a card a point value depending on its face value and/ or special type. This point value is used for scoring at the end of each round.
         '''
@@ -335,6 +342,12 @@ class Card:
             return 50
         else:
             return 0
+        
+    def changeColor(self, color):
+        '''
+        For wild cards, changes the cards color to whatever the player has chosen.
+        '''
+        self.color = color
 
 
 
