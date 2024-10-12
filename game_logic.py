@@ -1,16 +1,12 @@
 import objects as obj
 
-def game_loop():
+def game_loop(gameState):
     '''
     Main game loop that runs until a player is determined to be the winner. 
 
     Initializes the game state, sets up rounds, handles play, and scores rounds.
     Continues looping through rounds until a player wins the game.
     '''
-    deck = create_deck() # Initialize a deck
-
-    gameState = obj.GameState(deck) # Initialize the game state
-
     while not gameState.hasWinner: # Create game loop that runs until there is a winner
         setup_round(gameState)
         play_round(gameState)
@@ -111,7 +107,18 @@ def take_turn(player, gameState):
         player (Player): The player whose turn it is.
         gameState (GameState): The current game state object.
     '''
-    player.drawCard() # Each player begins by drawing a card
-    
     playableCards = [card for card in player.hand.cards if gameState.isCardPlayable(card)]
-    
+
+    while True:
+        userInput = gameState.userInterface.interfaceUser(player)
+        if isinstance(userInput, obj.Card) and userInput in playableCards:
+            print("We played a card!")
+        else:
+            match userInput:
+                case 0:
+                    player.callUno()
+                    print("Uno pressed!")
+                case 1:
+                    player.drawCard()
+                    # userInterface.promptPlayCard
+                    print("Draw pressed!")

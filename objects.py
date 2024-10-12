@@ -4,7 +4,7 @@ class GameState:
     '''
     Represents the state of the game.
     '''
-    def __init__(self, deck):
+    def __init__(self, deck, userInterface=None):
         '''
         Initializes a game state with the given attributes.
 
@@ -21,6 +21,7 @@ class GameState:
         self.roundWinner = None
         self.hasWinner = False
         self.gameWinner = None
+        self.userInterface = userInterface
 
     def addPlayer(self, player):
         '''
@@ -57,7 +58,7 @@ class GameState:
         Deals seven cards to each player at the start of the game.
         '''
         for player in self.players:
-            while player.hand.countCards() < 7:
+            while len(player.hand.cards) < 7:
                 player.drawCard(self.drawPile)
 
     def setTopCard(self):

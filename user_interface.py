@@ -206,14 +206,14 @@ class PygameWrapper:
                 return self.skipImage
             case 'Reverse':
                 return self.reverseImage
-            case 'Draw2':
+            case 'Draw Two':
                 return self.drawTwoImage
-            case 'Draw4':
+            case 'Wild Draw Four':
                 return self.drawFourImage
             case 'Wild':
                 return self.wildCardActionImage
             case _: 
-                return # I think in the corner case, we technically can have no rank? In any case, this intuitively feels useful.
+                return self.wildCardActionImage # I think in the corner case, we technically can have no rank? In any case, this intuitively feels useful.
 
 
     ''' getColor
@@ -221,13 +221,13 @@ class PygameWrapper:
     '''
     def getColor(self, color):
         match color:
-            case 'RED': 
+            case 'Red': 
                 return self.redCardImage
-            case 'GREEN': 
+            case 'Green': 
                 return self.greenCardImage
-            case 'BLUE':
+            case 'Blue':
                 return self.blueCardImage
-            case 'YELLOW':
+            case 'Yellow':
                 return self.yellowCardImage
             case _: 
                 # If we don't get any of the above cases, we default to wild card black.
@@ -744,8 +744,8 @@ class UserInterface:
         # Clickables!
         self.discardPile = discardPile # Discard pile clickable. Used for dragging and dropping cards onto it
         self.discardClick = Clickable(CARD_WIDTH, CARD_HEIGHT, discardPile, None, self.pygameWrapper)
-        self.discardClick.addGraphic(self.pygameWrapper.getColor(self.discardPile.cards[-1].color)) # Uses its top cards graphics
-        self.discardClick.addGraphic(self.pygameWrapper.getType(self.discardPile.cards[-1].rank))
+        # self.discardClick.addGraphic(self.pygameWrapper.getColor(self.discardPile.cards[-1].color)) # Uses its top cards graphics
+        # self.discardClick.addGraphic(self.pygameWrapper.getType(self.discardPile.cards[-1].rank))
         
         self.drawPile = drawPile # drawPile clickable! Honestly, there's no real reason for it having a drawPile object haha.
         self.drawClick = Clickable(CARD_WIDTH, CARD_HEIGHT, drawPile, None, self.pygameWrapper)
@@ -1011,16 +1011,16 @@ class UserInterface:
 
             # If the user selects a color, return that color!
             if redChoice.isClicked(mouseButtons, mousePos):
-                return 'RED'
+                return 'Red'
 
             if greenChoice.isClicked(mouseButtons, mousePos):
-                return 'GREEN'
+                return 'Green'
 
             if blueChoice.isClicked(mouseButtons, mousePos):
-                return 'BLUE'
+                return 'Blue'
 
             if yellowChoice.isClicked(mouseButtons, mousePos):
-                return 'YELLOW' 
+                return 'Yellow' 
 
             pygame.display.flip()
 
@@ -1031,51 +1031,10 @@ class UserInterface:
 """ Random, kind of bad example code. Uses Ryan's card from this branch: https://github.com/jul1anpa/project-uno/tree/CardClass
 from objects import Player, DiscardPile, DrawPile
 
-color = ('RED','GREEN','BLUE','YELLOW')
-rank = ('0','1','2','3','4','5','6','7','8','9','Skip','Reverse','Draw2','Draw4','Wild')
-ctype = {'0':'number','1':'number','2':'number','3':'number','4':'number','5':'number','6':'number',
-            '7':'number','8':'number','9':'number','Skip':'action','Reverse':'action','Draw2':'action',
-            'Draw4':'action_nocolor','Wild':'action_nocolor'}
-
-class RyanCard:
-    '''
-    Represents a card in UNO.
-    '''
-    def __init__(self, color, rank):
-        self.rank = rank
-        self.deck = []
-
-        if ctype[rank] == 'number':
-            self.color = color
-        elif ctype[rank] == 'action':
-            self.color = color
-        else:
-            self.color = None
-''' I'm pretty sure this is broken; it infinitely loops.
-        for clr in color:
-            for ran in rank:
-                if ctype[ran] != 'action_nocolor':
-                    self.deck.append(RyanCard(clr, ran))
-                    self.deck.append(RyanCard(clr, ran))
-                else:
-                    self.deck.append(RyanCard(clr, ran))
-'''
-
 player = Player("Test")
-
-for _ in range(30):  # We're just adding 30 cards really quickly
-    testCard = RyanCard("GREEN", '3')
-    player.hand.addCard(testCard)
-blueCard = RyanCard("Wild", 'Wild')
-yellowCard = RyanCard("Draw4", 'Draw4')
-redCard = RyanCard("RED", 'Draw2')
-player.hand.addCard(yellowCard)
-player.hand.addCard(redCard)
-player.hand.addCard(blueCard)
 
 pygameWrapper = PygameWrapper(800, 600)
 discardPile = DiscardPile()
-discardPile.addCard(RyanCard("RED", '7'))
 drawPile = DrawPile(None)
 userInterface = UserInterface(pygameWrapper, discardPile, drawPile)
 
