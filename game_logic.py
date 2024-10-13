@@ -1,5 +1,4 @@
 import objects as obj
-import pygame
 
 def game_loop(gameState):
     '''
@@ -108,8 +107,6 @@ def take_turn(player, gameState):
         player (Player): The player whose turn it is.
         gameState (GameState): The current game state object.
     '''
-    cooldownTime = 2000
-    currentTime = pygame.time.get_ticks()
 
     playableCards = [card for card in player.hand.cards if gameState.isCardPlayable(card)]
 
@@ -118,7 +115,7 @@ def take_turn(player, gameState):
         while True:
             userInput = gameState.userInterface.interfaceUser(player)
 
-            if (userInput, obj.Card) and userInput in playableCards:
+            if isinstance(userInput, obj.Card) and userInput in playableCards:
                 gameState.playCard(player, userInput)
                 print(f"{player.name} played a card!")
                 print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
@@ -136,13 +133,12 @@ def take_turn(player, gameState):
                         print("Uno pressed!")
 
                     case 1:
-                        if currentTime > cooldownTime: # This delay is not working correctly
-                            player.drawCard(gameState.drawPile)
-                            # userInterface.promptPlayCard
-                            print("Draw pressed!")
-                            print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
-                            gameState.nextPlayer()
-                            return
+                        player.drawCard(gameState.drawPile)
+                        # userInterface.promptPlayCard
+                        print("Draw pressed!")
+                        print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+                        gameState.nextPlayer()
+                        return
 
     elif type(player) is obj.ComputerPlayer: # Checks if the player is a ComputerPlayer object
 
