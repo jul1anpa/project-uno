@@ -128,7 +128,7 @@ def take_turn(player, gameState):
                         print("Uno pressed!")
 
                     case 1:
-                        player.drawCard(gameState.drawPile)
+                        player.drawCard(gameState.drawPile, gameState.discardPile)
                         print(f"{player.name} has drawn a card!")
                         print(f"{player.name} hand size is now {len(player.hand.cards)}\n")
 
@@ -150,7 +150,7 @@ def take_turn(player, gameState):
             return
         
         else:
-            player.drawCard(gameState.drawPile)
+            player.drawCard(gameState.drawPile, gameState.discardPile)
             print(f"{player.name} has drawn a card!")
             print(f"{player.name} hand size is now {len(player.hand.cards)}\n")
 
