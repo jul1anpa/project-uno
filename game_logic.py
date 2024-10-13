@@ -1,4 +1,5 @@
 import objects as obj
+import pygame
 
 def game_loop(gameState):
     '''
@@ -78,7 +79,6 @@ def play_round(gameState):
         if currentPlayer.hand.isEmpty():
             gameState.roundWinner = currentPlayer
             gameState.roundWon = True
-        gameState.nextPlayer()
 
 
 
@@ -107,19 +107,54 @@ def take_turn(player, gameState):
         player (Player): The player whose turn it is.
         gameState (GameState): The current game state object.
     '''
+    cooldownTime = 2000
+    currentTime = pygame.time.get_ticks()
+
     playableCards = [card for card in player.hand.cards if gameState.isCardPlayable(card)]
 
-    while True:
-        userInput = gameState.userInterface.interfaceUser(player)
-        if isinstance(userInput, obj.Card) and userInput in playableCards:
-            gameState.playCard(player, userInput)
-            print("We played a card!")
+    if type(player) is obj.Player:
+        while True:
+            userInput = gameState.userInterface.interfaceUser(player)
+            if (userInput, obj.Card) and userInput in playableCards:
+                gameState.playCard(player, userInput)
+                print(f"{player.name} played a card!")
+                print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+
+                if userInput.action is not None and userInput.action != "Wild" and len(gameState.players) == 2:
+                    pass
+                
+                gameState.nextPlayer()
+                return
+            else:
+                match userInput:
+                    case 0:
+                        player.callUno()
+                        print("Uno pressed!")
+                    case 1:
+                        if currentTime > cooldownTime:
+                            player.drawCard(gameState.drawPile)
+                            # userInterface.promptPlayCard
+                            print("Draw pressed!")
+                            print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+                            gameState.nextPlayer()
+                            return
+
+    elif type(player) is obj.ComputerPlayer:
+        if len(playableCards) > 0:
+            card = gameState.playCard(player, None, playableCards)
+            print(f"{player.name} played a card!")
+            print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+
+            if card.action is not None and card.action != "Wild" and len(gameState.players) == 2:
+                pass
+
+            gameState.nextPlayer()
+            return
         else:
-            match userInput:
-                case 0:
-                    player.callUno()
-                    print("Uno pressed!")
-                case 1:
-                    player.drawCard(gameState.drawPile())
-                    # userInterface.promptPlayCard
-                    print("Draw pressed!")
+            player.drawCard(gameState.drawPile)
+            print(f"{player.name} has drawn a card!")
+            print(f"{player.name} hand size is now {len(player.hand.cards)}\n")
+            gameState.nextPlayer()
+
+    else:
+        "Error: Turn not taken"

@@ -119,12 +119,39 @@ class GameState:
         
         return False
     
-    def playCard(self, player, card):
+    def playCard(self, player, card=None, playableCards=None):
         '''
         Placeholder for a player playing a card from their hand.
         '''
+        if isinstance(playableCards, list):
+            card = random.choice(playableCards)
+
+        if card.action is not None:
+
+            if card.action == "Wild":
+                # Need logic
+                print("A Wild card was played.")
+            elif card.action == "Skip":
+                self.skip()
+                print("A Skip card was played.")
+            elif card.action == "Reverse":
+                self.reverseDirection()
+                print("A Reverse card was played.")
+            elif card.action == "Draw Two":
+                self.drawTwo()
+                print("A Draw Two card was played.")
+            elif card.action == "Wild Draw Four":
+                self.drawFour()
+                print("A Wild Draw Four card was played.")
+
+        else:
+            print(f"A {card.rank} was played.")
+
         cardToPlay = player.hand.removeCard(card)
         self.discardPile.addCard(cardToPlay)
+
+        if type(player) is ComputerPlayer:
+            return card
 
     def reverseDirection(self):
         '''
@@ -261,19 +288,6 @@ class ComputerPlayer(Player):
     '''
     Represents a computer player in the UNO game.
     '''   
-    def playCard(self, topCard):
-        '''
-        Computer player plays a card from hand that matches the top card or a wild card. If there are no playable cards, the computer
-        player will draw a card instead.
-        '''
-        playable_cards = [card for card in self.hand if card.color == topCard.color or card.value == topCard.value or card.value == "Wild"]
-        
-        if playable_cards:
-            chosen_card = random.choice(playable_cards)
-            self.hand.removeCard(chosen_card)
-            return chosen_card
-        else:
-            self.drawCard()
 
 
 
@@ -335,7 +349,7 @@ class Card:
         '''
         Assigns a card a point value depending on its face value and/ or special type. This point value is used for scoring at the end of each round.
         '''
-        if self.rank is not None:
+        if self.rank is not None and isinstance(self.rank, int):
             return self.rank
         elif self.action == "Draw Two" or self.action == "Reverse" or self.action == "Skip":
             return 20
