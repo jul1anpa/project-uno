@@ -42,7 +42,7 @@ class GameState:
         newDealer = None
 
         for player in self.players:
-            card = self.drawPile.draw()
+            card = self.drawPile.draw(self.discardPile)
             if card.action is None and card.rank > highestValue: # Ensures that only number cards are considered and the card's value is higher than the current highest value
                 highestValue = card.rank # Sets new highest value
                 newDealer = player # Assigns dealer to the player who drew the highest value card
@@ -59,18 +59,18 @@ class GameState:
         '''
         for player in self.players:
             while len(player.hand.cards) < 7:
-                player.drawCard(self.drawPile)
+                player.drawCard(self.drawPile, self.discardPile)
 
     def setTopCard(self):
         '''
         Places top card of draw pile on discard pile to begin play and handles logic depending on what is drawn.
         '''
-        card = self.drawPile.draw()
+        card = self.drawPile.draw(self.discardPile)
 
         while card.action == "Wild" or card.action == "Wild Draw Four":
             print(f"A Wild was drawn for top card, drawing again...")
             self.drawPile.addCardToBottom(card) 
-            card = self.drawPile.draw()
+            card = self.drawPile.draw(self.discardPile)
         
         if card.action == "Draw Two":
             print(f"The top card is a {card.color} Draw Two\n")
@@ -138,7 +138,6 @@ class GameState:
             for card in player.hand.cards:
                 if card.color is not None:
                     colors.append(card.color)
-            print(colors)
 
         if card.action is not None:
 
@@ -173,13 +172,16 @@ class GameState:
                 if type(player) is Player:
                     color = self.userInterface.chooseColor("A Wild Draw Four card was played. Choose a color:")
                 elif type(player) is ComputerPlayer:
-                    color = random.choice(colors)
+                    if len(colors) > 0:
+                        color = random.choice(colors)
+                    else:
+                        color = random.choice(["Red", "Yellow", "Blue", "Green"])
 
                 card.changeColor(color)
                 print(f"{player.name} played a Wild Draw Four card.")
 
         else:
-            print(f"{player.name} played a {card.rank} card.")
+            print(f"{player.name} played a {card.color} {card.rank} card.")
 
         cardToPlay = player.hand.removeCard(card)
         self.discardPile.addCard(cardToPlay)
@@ -205,8 +207,8 @@ class GameState:
         The player ahead of the current player draws two cards and is skipped.
         '''
         playerAffected = self.players[(self.currentPlayerIndex + self.direction) % len(self.players)]
-        playerAffected.drawCard(self.drawPile)
-        playerAffected.drawCard(self.drawPile)
+        playerAffected.drawCard(self.drawPile, self.discardPile)
+        playerAffected.drawCard(self.drawPile, self.discardPile)
         self.skip()
 
     def drawFour(self):
@@ -215,14 +217,15 @@ class GameState:
         '''
         playerAffected = self.players[(self.currentPlayerIndex + self.direction) % len(self.players)]
         for _ in range(4):
-            playerAffected.drawCard(self.drawPile)
+            playerAffected.drawCard(self.drawPile, self.discardPile)
         self.skip()
 
     def skip(self):
         '''
         Skips the next player in turn order.
         '''
-        self.currentPlayerIndex = (self.currentPlayerIndex + (self.direction * 2)) % len(self.players)
+        self.currentPlayerIndex = (self.currentPlayerIndex + self.direction) % len(self.players)
+        print(f"Player skipped. Current player index is now: {self.currentPlayerIndex}")
 
     def nextPlayer(self):
         '''
@@ -245,7 +248,8 @@ class GameState:
         # The formula is below:
         #                           a % b    =     a - b * floor(a/b)
 
-        self.currentPlayerIndex = (self.currentPlayerIndex + self.direction) % len(self.players) 
+        self.currentPlayerIndex = (self.currentPlayerIndex + self.direction) % len(self.players)
+        print(f"Next turn. Current player index is now: {self.currentPlayerIndex}")
 
 
 
@@ -282,12 +286,12 @@ class Player:
         else:
             raise ValueError("Name must be a non-empty string value.")
 
-    def drawCard(self, drawPile):
+    def drawCard(self, drawPile, discardPile):
         '''
         Draws a card from the draw pile and stores it in the player's hand.
         '''
         if not drawPile.isEmpty():
-            card = drawPile.draw()
+            card = drawPile.draw(discardPile)
             self.hand.addCard(card)
 
     def callUno(self):
@@ -461,14 +465,14 @@ class DrawPile:
         '''
         self.cards.append(card) # Appends a card to the end of the cards list
 
-    def draw(self):
+    def draw(self, discardPile):
         '''
         Returns the last card stored in the draw pile or reshuffles the draw pile if there are none left.
         '''
         if self.cards:
             return self.cards.pop() # Removes a card from the end of the cards list
         else:
-            self.reshuffle()
+            self.reshuffle(discardPile)
             return self.cards.pop()
     
     def shuffleInitial(self):

@@ -74,7 +74,7 @@ def play_round(gameState):
     '''
     while not gameState.roundWon:
         currentPlayer = gameState.players[gameState.currentPlayerIndex]
-        print(f"The current player is {currentPlayer.name}.")
+        print(f"The current player is {currentPlayer.name}.\nPlayer Index: {gameState.currentPlayerIndex}")
         take_turn(currentPlayer, gameState)
         if currentPlayer.hand.isEmpty():
             gameState.roundWinner = currentPlayer
