@@ -68,17 +68,25 @@ class GameState:
         card = self.drawPile.draw()
 
         while card.action == "Wild" or card.action == "Wild Draw Four":
+            print(f"A Wild was drawn for top card, drawing again...")
             self.drawPile.addCardToBottom(card) 
             card = self.drawPile.draw()
         
         if card.action == "Draw Two":
+            print(f"The top card is a {card.color} Draw Two\n")
             self.drawTwo()
+
         elif card.action == "Reverse":
+            print(f"The top card is a {card.color} Reverse.\n")
             self.reverseDirection()
             self.nextPlayer()
+
         elif card.action == "Skip":
+            print(f"The top card is a {card.color} Skip.\n")
             self.skip()
+
         elif card.action is None:
+            print(f"The top card is a {card.color} {card.rank}.\n")
             self.nextPlayer()
 
         self.discardPile.addCard(card)
@@ -104,7 +112,7 @@ class GameState:
         for player in self.players:
             player.resetHand(self.drawPile)
         discardPileCards = self.discardPile.removeAllCards()
-        self.drawPile += discardPileCards
+        self.drawPile.cards += discardPileCards
 
     def isCardPlayable(self, card):
         '''
@@ -124,31 +132,61 @@ class GameState:
         Placeholder for a player playing a card from their hand.
         '''
         if isinstance(playableCards, list):
+
             card = random.choice(playableCards)
+            colors = []
+            for card in playableCards:
+                if card.color is not None:
+                    colors.append(card.color)
+            print(colors)
 
         if card.action is not None:
 
             if card.action == "Wild":
-                # Need logic
-                print("A Wild card was played.")
+
+                if type(player) is Player:
+                    color = self.userInterface.chooseColor("A Wild card was played. Choose a color:")
+                elif type(player) is ComputerPlayer:
+                    color = random.choice(colors)
+
+                card.changeColor(color)
+                print(f"{player.name} played a Wild card.")
+
             elif card.action == "Skip":
                 self.skip()
-                print("A Skip card was played.")
+                print(f"{player.name} played a Skip card.")
+
             elif card.action == "Reverse":
                 self.reverseDirection()
-                print("A Reverse card was played.")
+                print(f"{player.name} played a Reverse card.")
+
             elif card.action == "Draw Two":
                 self.drawTwo()
-                print("A Draw Two card was played.")
+                print(f"{player.name} played a Draw Two card.")
+
             elif card.action == "Wild Draw Four":
                 self.drawFour()
-                print("A Wild Draw Four card was played.")
+
+                if type(player) is Player:
+                    color = self.userInterface.chooseColor("A Wild Draw Four card was played. Choose a color:")
+                elif type(player) is ComputerPlayer:
+                    color = random.choice(colors)
+
+                card.changeColor(color)
+                print(f"{player.name} played a Wild Draw Four card.")
 
         else:
-            print(f"A {card.rank} was played.")
+            print(f"{player.name} played a {card.rank} card.")
 
         cardToPlay = player.hand.removeCard(card)
         self.discardPile.addCard(cardToPlay)
+
+        print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+
+        if len(self.players) == 2 and card.action == "Reverse":
+            return
+        
+        self.nextPlayer()
 
         if type(player) is ComputerPlayer:
             return card
@@ -220,7 +258,7 @@ class Player:
         :param isDealer: bool - Indicates if the player is the dealer. Defaults to False.
         '''
         self._name = name
-        self._points = 0
+        self.points = 0
         self.hand = Hand()
         self.hasUno = False
 
@@ -240,23 +278,6 @@ class Player:
             self._name = name
         else:
             raise ValueError("Name must be a non-empty string value.")
-
-    @property
-    def points(self):
-        '''
-        Returns the point total a player has.
-        '''
-        return self._points
-    
-    @points.setter
-    def points(self, points):
-        '''
-        Sets a player's point total.
-        '''
-        if isinstance(points, int):
-            self._points += points
-        else:
-            raise ValueError("Points must be an integer value.")
 
     def drawCard(self, drawPile):
         '''

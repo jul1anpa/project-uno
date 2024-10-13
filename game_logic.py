@@ -74,6 +74,7 @@ def play_round(gameState):
     '''
     while not gameState.roundWon:
         currentPlayer = gameState.players[gameState.currentPlayerIndex]
+        print(f"The current player is {currentPlayer.name}.")
         take_turn(currentPlayer, gameState)
         if currentPlayer.hand.isEmpty():
             gameState.roundWinner = currentPlayer
@@ -94,7 +95,7 @@ def score_round(gameState):
         for card in player.hand.cards:
             scoredPoints += card.points
     
-    gameState.roundWinner.points(scoredPoints)
+    gameState.roundWinner.points = scoredPoints
     gameState.roundWinner = None
 
 
@@ -117,14 +118,8 @@ def take_turn(player, gameState):
 
             if isinstance(userInput, obj.Card) and userInput in playableCards:
                 gameState.playCard(player, userInput)
-                print(f"{player.name} played a card!")
-                print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
-
-                if userInput.action is not None and userInput.action != "Wild" and len(gameState.players) == 2: # For two-player games, all action cards but the Wild card cause the other player to be skipped. This code ensures that the next turn is still the current player.
-                    pass
-                
-                gameState.nextPlayer()
                 return
+            
             else:
                 match userInput:
 
@@ -134,28 +129,37 @@ def take_turn(player, gameState):
 
                     case 1:
                         player.drawCard(gameState.drawPile)
-                        # userInterface.promptPlayCard
-                        print("Draw pressed!")
-                        print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
+                        print(f"{player.name} has drawn a card!")
+                        print(f"{player.name} hand size is now {len(player.hand.cards)}\n")
+
+                        drawnCard = player.hand.cards[-1]
+
+                        willPlayCard = gameState.userInterface.promptPlayCard(drawnCard)
+
+                        if willPlayCard and gameState.isCardPlayable(drawnCard):
+                            gameState.playCard(player, drawnCard)
+                            return
+
                         gameState.nextPlayer()
                         return
 
     elif type(player) is obj.ComputerPlayer: # Checks if the player is a ComputerPlayer object
 
         if len(playableCards) > 0:
-            card = gameState.playCard(player, None, playableCards)
-            print(f"{player.name} played a card!")
-            print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
-
-            if card.action is not None and card.action != "Wild" and len(gameState.players) == 2: # Two-player turn order logic for all action cards except Wild
-                pass
-
-            gameState.nextPlayer()
+            gameState.playCard(player, None, playableCards)
             return
+        
         else:
             player.drawCard(gameState.drawPile)
             print(f"{player.name} has drawn a card!")
             print(f"{player.name} hand size is now {len(player.hand.cards)}\n")
+
+            drawnCard = player.hand.cards[-1]
+
+            if gameState.isCardPlayable(drawnCard):
+                gameState.playCard(player, drawnCard)
+                return
+
             gameState.nextPlayer()
 
     else:
