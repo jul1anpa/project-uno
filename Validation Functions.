@@ -1,0 +1,26 @@
+# Validating Player Name Input. Makes sure required field (specifically name) is entered as per the rubric. But also sets textbox entries to appropriate fixed length or rather, it limits the length of input strings.
+def get_player_name():
+# This function ensures that a non-empty name is provided for each player. And also limits the player name to a maximum length of 20 characters.
+
+    while True:
+        name = input("Enter your name (max 20 characters): ")
+        if len(name) > 20:
+            print("Name is too long. Please, enter a name with 20 characters or less.")
+        elif not name.isalnum():
+            print("Name must contain only letters and numbers.")
+        else:
+            return name
+
+# Validating Card Selection. Checks if the user entered incorrect data values, as per the rubric.
+def get_card_choice(hand):
+# This function ensures that the user enters a valid integer.
+
+    while True:
+        try:
+            choice = int(input("Enter the number of the card you want to play: "))
+            if 0 <= choice < len(hand):
+                return choice
+            else:
+                print("Invalid card choice. Please, enter a valid number.")
+        except ValueError:
+            print("Invalid input. Please, enter a number.")
