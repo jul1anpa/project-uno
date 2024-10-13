@@ -90,6 +90,7 @@ def score_round(gameState):
         gameState (GameState): The current game state object.
     '''
     scoredPoints = 0
+
     for player in gameState.players:
         for card in player.hand.cards:
             scoredPoints += card.points
@@ -112,26 +113,30 @@ def take_turn(player, gameState):
 
     playableCards = [card for card in player.hand.cards if gameState.isCardPlayable(card)]
 
-    if type(player) is obj.Player:
+    if type(player) is obj.Player: # Checks if the player is a Player object
+
         while True:
             userInput = gameState.userInterface.interfaceUser(player)
+
             if (userInput, obj.Card) and userInput in playableCards:
                 gameState.playCard(player, userInput)
                 print(f"{player.name} played a card!")
                 print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
 
-                if userInput.action is not None and userInput.action != "Wild" and len(gameState.players) == 2:
+                if userInput.action is not None and userInput.action != "Wild" and len(gameState.players) == 2: # For two-player games, all action cards but the Wild card cause the other player to be skipped. This code ensures that the next turn is still the current player.
                     pass
                 
                 gameState.nextPlayer()
                 return
             else:
                 match userInput:
+
                     case 0:
                         player.callUno()
                         print("Uno pressed!")
+
                     case 1:
-                        if currentTime > cooldownTime:
+                        if currentTime > cooldownTime: # This delay is not working correctly
                             player.drawCard(gameState.drawPile)
                             # userInterface.promptPlayCard
                             print("Draw pressed!")
@@ -139,13 +144,14 @@ def take_turn(player, gameState):
                             gameState.nextPlayer()
                             return
 
-    elif type(player) is obj.ComputerPlayer:
+    elif type(player) is obj.ComputerPlayer: # Checks if the player is a ComputerPlayer object
+
         if len(playableCards) > 0:
             card = gameState.playCard(player, None, playableCards)
             print(f"{player.name} played a card!")
             print(f"{player.name}'s hand size is now {len(player.hand.cards)}\n")
 
-            if card.action is not None and card.action != "Wild" and len(gameState.players) == 2:
+            if card.action is not None and card.action != "Wild" and len(gameState.players) == 2: # Two-player turn order logic for all action cards except Wild
                 pass
 
             gameState.nextPlayer()
