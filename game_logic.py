@@ -13,6 +13,8 @@ def game_loop(gameState):
         score_round(gameState)
         gameState.checkWinner() # Checks for winner and sets hasWinner to True if one is found
         gameState.nextRound() # Proceeds to next round if there is no winner
+    
+    gameState.userInterface.pygameWrapper.textPopUp([f"{gameState.gameWinner.name} has won the game in {gameState.round} rounds!"])
 
 
 
@@ -56,7 +58,7 @@ def setup_round(gameState):
         gameState (GameState): The current game state object.
     '''
     gameState.drawPile.shuffleInitial()
-    gameState.setDealer()
+    # gameState.setDealer() Excluding this function since we choose the dealer manually in the application
     gameState.drawPile.shuffleInitial()
     gameState.dealCards()
     gameState.setTopCard()
@@ -79,6 +81,8 @@ def play_round(gameState):
         if currentPlayer.hand.isEmpty():
             gameState.roundWinner = currentPlayer
             gameState.roundWon = True
+    
+    gameState.userInterface.pygameWrapper.textPopUp([f"{gameState.roundWinner.name} has won the round!"])
 
 
 
@@ -96,6 +100,9 @@ def score_round(gameState):
             scoredPoints += card.points
     
     gameState.roundWinner.points = scoredPoints
+
+    gameState.userInterface.pygameWrapper.textPopUp([f"{gameState.roundWinner.name} scored {gameState.roundWinner.points} points!"])
+
     gameState.roundWinner = None
 
 
@@ -157,7 +164,7 @@ def take_turn(player, gameState):
             drawnCard = player.hand.cards[-1]
 
             if gameState.isCardPlayable(drawnCard):
-                gameState.playCard(player, drawnCard)
+                gameState.playCard(player, drawnCard, playableCards)
                 return
 
             gameState.nextPlayer()

@@ -131,13 +131,14 @@ class GameState:
         '''
         Placeholder for a player playing a card from their hand.
         '''
-        if isinstance(playableCards, list):
-
-            card = random.choice(playableCards)
+        if type(player) is ComputerPlayer:
             colors = []
             for card in player.hand.cards:
                 if card.color is not None:
                     colors.append(card.color)
+        
+        if isinstance(playableCards, list) and card is None:
+            card = random.choice(playableCards)
 
         if card.action is not None:
 
@@ -432,6 +433,8 @@ class DiscardPile:
         restOfCards = self.cards[:-1]
         self.cards = topCard
         return restOfCards
+
+
 
 
 
