@@ -744,8 +744,6 @@ class UserInterface:
         # Clickables!
         self.discardPile = discardPile # Discard pile clickable. Used for dragging and dropping cards onto it
         self.discardClick = Clickable(CARD_WIDTH, CARD_HEIGHT, discardPile, None, self.pygameWrapper)
-        # self.discardClick.addGraphic(self.pygameWrapper.getColor(self.discardPile.cards[-1].color)) # Uses its top cards graphics
-        # self.discardClick.addGraphic(self.pygameWrapper.getType(self.discardPile.cards[-1].rank))
         
         self.drawPile = drawPile # drawPile clickable! Honestly, there's no real reason for it having a drawPile object haha.
         self.drawClick = Clickable(CARD_WIDTH, CARD_HEIGHT, drawPile, None, self.pygameWrapper)
@@ -781,6 +779,7 @@ class UserInterface:
         # Basically, we tell that when the clickcooldown is on, then the arrow cannot show a hover image.
         self.rightArrow.canHover = True
         self.leftArrow.canHover = True
+        self.drawClick.canHover = True
 
     ''' turnOnClickCooldown
         This is how we handle the turning on of clickCooldown! Oh, and the logic of making sure it turns off eventually.
@@ -790,6 +789,7 @@ class UserInterface:
         
         self.rightArrow.canHover = False
         self.leftArrow.canHover = False
+        self.drawClick.canHover = False
         
         # We just make a thread that waits 0.5 seconds to turnOffClickCooldown
         threading.Timer(0.5, self.turnOffClickCooldown).start()
@@ -915,6 +915,7 @@ class UserInterface:
                 return 0
             
             if self.drawClick.isClicked(mouseButtons, mousePos) and not self.clickCooldown: 
+                self.turnOnClickCooldown()
                 return 1
             
             # If the discard pile is clicked, whilst a card is dragged on it, return the dragged card.
