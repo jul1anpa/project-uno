@@ -35,12 +35,12 @@ def create_deck():
     
     for color in colors:
         for action in actions:
-            deck.append(obj.Card(color, None, action)) # Creates two copies of each action for each color
-            deck.append(obj.Card(color, None, action))
+            deck.append(obj.Card(color, action, action)) # Creates two copies of each action for each color
+            deck.append(obj.Card(color, action, action))
     
     for wild in wilds:
         for _ in range(4):
-            deck.append(obj.Card(None, None, wild)) # Creates four copies of each wild action
+            deck.append(obj.Card(None, wild, wild)) # Creates four copies of each wild action
     
     return deck
 
@@ -112,6 +112,7 @@ def take_turn(player, gameState):
     while True:
         userInput = gameState.userInterface.interfaceUser(player)
         if isinstance(userInput, obj.Card) and userInput in playableCards:
+            gameState.playCard(player, userInput)
             print("We played a card!")
         else:
             match userInput:
@@ -119,6 +120,6 @@ def take_turn(player, gameState):
                     player.callUno()
                     print("Uno pressed!")
                 case 1:
-                    player.drawCard()
+                    player.drawCard(gameState.drawPile())
                     # userInterface.promptPlayCard
                     print("Draw pressed!")

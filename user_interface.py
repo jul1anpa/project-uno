@@ -182,25 +182,25 @@ class PygameWrapper:
     '''
     def getType(self, rank):
         match rank:
-            case '0': 
+            case 0: 
                 return self.zeroImage # ZERO = 0. So as we matching self, if self is zero, then viola, we give the image for zero.
-            case '1':
+            case 1:
                 return self.oneImage # I apologize for this syntax, but it's how our ruff checker wants it.
-            case '2':
+            case 2:
                 return self.twoImage
-            case '3':
+            case 3:
                 return self.threeImage
-            case '4':
+            case 4:
                 return self.fourImage
-            case '5':
+            case 5:
                 return self.fiveImage
-            case '6':
+            case 6:
                 return self.sixImage
-            case '7':
+            case 7:
                 return self.sevenImage
-            case '8':
+            case 8:
                 return self.eightImage
-            case '9':
+            case 9:
                 return self.nineImage
             case 'Skip':
                 return self.skipImage
