@@ -135,7 +135,7 @@ class GameState:
 
             card = random.choice(playableCards)
             colors = []
-            for card in playableCards:
+            for card in player.hand.cards:
                 if card.color is not None:
                     colors.append(card.color)
             print(colors)
@@ -147,7 +147,10 @@ class GameState:
                 if type(player) is Player:
                     color = self.userInterface.chooseColor("A Wild card was played. Choose a color:")
                 elif type(player) is ComputerPlayer:
-                    color = random.choice(colors)
+                    if len(colors) > 0:
+                        color = random.choice(colors)
+                    else:
+                        color = random.choice(["Red", "Yellow", "Blue", "Green"])
 
                 card.changeColor(color)
                 print(f"{player.name} played a Wild card.")
